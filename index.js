@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const os = require('os');
-const ytdlp = require('yt-dlp-exec');
+const { spawn } = require('child_process');
 
 const app = express();
 app.use(express.json());
@@ -17,16 +17,45 @@ function chooseBestAudioFormat(formats) {
   return audioOnly.sort((a, b) => (b.tbr || 0) - (a.tbr || 0))[0];
 }
 
+// Função para executar yt-dlp e retornar JSON
+function runYtDlpJson(url) {
+  return new Promise((resolve, reject) => {
+    const args = ['--dump-json', '--extractor-args', 'youtube:player_client=default', url];
+    const ytDlpProcess = spawn('yt-dlp', args);
+
+    let output = '';
+    let errorOutput = '';
+
+    ytDlpProcess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    ytDlpProcess.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    ytDlpProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(errorOutput));
+      } else {
+        try {
+          const info = JSON.parse(output);
+          resolve(info);
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  });
+}
+
 // Rota para listar formatos disponíveis (somente vídeo)
 app.post('/formats', async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).send({ error: 'A URL do vídeo é necessária.' });
 
   try {
-    const info = await ytdlp(url, {
-      dumpSingleJson: true,
-      extractorArgs: { youtube: { player_client: 'default' } },
-    });
+    const info = await runYtDlpJson(url);
 
     const formats = info.formats.map(f => ({
       format_id: f.format_id,
@@ -57,10 +86,7 @@ app.post('/download', async (req, res) => {
   if (!format_id) return res.status(400).send({ error: 'O format_id do vídeo é necessário para o download.' });
 
   try {
-    const info = await ytdlp(url, {
-      dumpSingleJson: true,
-      extractorArgs: { youtube: { player_client: 'default' } },
-    });
+    const info = await runYtDlpJson(url);
 
     const formats = info.formats.map(f => ({
       format_id: f.format_id,
@@ -80,10 +106,25 @@ app.post('/download', async (req, res) => {
     const formatCombo = `${format_id}+${bestAudio.format_id}`;
     const outputTemplate = path.join(videoDir, '%(title)s.%(ext)s');
 
-    await ytdlp(url, {
-      format: formatCombo,
-      output: outputTemplate,
-      extractorArgs: { youtube: { player_client: 'default' } },
+    await new Promise((resolve, reject) => {
+      const args = ['-f', formatCombo, '-o', outputTemplate, '--extractor-args', 'youtube:player_client=default', url];
+      const downloadProcess = spawn('yt-dlp', args);
+
+      downloadProcess.stdout.on('data', (data) => {
+        console.log(`yt-dlp: ${data}`);
+      });
+
+      downloadProcess.stderr.on('data', (data) => {
+        console.error(`yt-dlp error: ${data}`);
+      });
+
+      downloadProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`yt-dlp exited with code ${code}`));
+        }
+      });
     });
 
     res.send({ message: 'Download concluído com sucesso!' });
