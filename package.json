@@ -7,13 +7,19 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": ["youtube", "downloader", "yt-dlp", "express", "nodejs"],
+  "keywords": [
+    "youtube",
+    "downloader",
+    "yt-dlp",
+    "express",
+    "nodejs"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "yt-dlp-exec": "^1.0.0"
+    "yt-dlp-exec": "^1.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
