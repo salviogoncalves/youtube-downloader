@@ -1,23 +1,21 @@
 {
-  "name": "youtube-downloader",
+  "name": "youtube-downloader-backend",
   "version": "1.0.0",
-  "description": "Backend para downloader de vídeos do YouTube com yt-dlp",
+  "description": "Backend para downloader de vídeos do YouTube usando yt-dlp-exec",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js"
   },
-  "keywords": [
-    "youtube",
-    "downloader",
-    "yt-dlp",
-    "express"
-  ],
+  "keywords": ["youtube", "downloader", "yt-dlp", "express", "nodejs"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "yt-dlp-exec": "^1.0.2"
+    "yt-dlp-exec": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }

@@ -10,7 +10,7 @@ app.use(cors());
 
 const videoDir = path.resolve(os.tmpdir(), 'downloads');
 
-// Função para escolher o melhor formato de áudio (mantém igual)
+// Função para escolher o melhor formato de áudio
 function chooseBestAudioFormat(formats) {
   const audioOnly = formats.filter(f => f.acodec !== 'none' && f.vcodec === 'none');
   if (audioOnly.length === 0) return null;
